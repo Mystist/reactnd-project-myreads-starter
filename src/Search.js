@@ -1,32 +1,45 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { Link } from 'react-router-dom'
-import escapeRegExp from 'escape-string-regexp'
+import sortBy from 'sort-by'
+import _ from 'lodash'
+import * as BooksAPI from './BooksAPI'
 import Book from './Book'
 
 class Search extends Component {
   static propTypes = {
-    books: PropTypes.array.isRequired,
     onUpdateBook: PropTypes.func.isRequired
   }
 
   state = {
-    query: ''
+    query: '',
+    books: []
   }
 
   updateQuery(query) {
     this.setState({ 'query': query })
+
+    if (!query) {
+      this.setState({ books: [] })
+      return
+    }
+
+    this.search(query)
   }
 
-  render() {
-    const { books, onUpdateBook } = this.props
-    const { query } = this.state
+  search = _.debounce((query) => {
+    BooksAPI.search(query, 100).then((books) => {
+      if (this.state.query && books instanceof Array && books.length > 0) {
+        this.setState({ books: books.sort(sortBy('title')) })
+      } else {
+        this.setState({ books: [] })
+      }
+    })
+  }, 700)
 
-    let showingBooks
-    if (query) {
-      const match = new RegExp(escapeRegExp(query), 'i')
-      showingBooks = books.filter((book) => match.test(book.title))
-    }
+  render() {
+    const { onUpdateBook } = this.props
+    const { books, query } = this.state
 
     return (
       <div className="search-books">
@@ -41,10 +54,10 @@ class Search extends Component {
             />
           </div>
         </div>
-        {showingBooks && (
+        {books.length > 0 && (
           <div className="search-books-results">
             <ol className="books-grid">
-              {showingBooks.map((book) => (
+              {books.map((book) => (
                 <li key={book.id}>
                   <Book book={book} onUpdateBook={onUpdateBook} />
                 </li>

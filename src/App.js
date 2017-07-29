@@ -17,8 +17,13 @@ class BooksApp extends Component {
     })
   }
   updateBook = (book) => {
+    let books = this.state.books.map((m) => m.id === book.id ? book : m)
+    if (!books.find((m) => m.id === book.id)) {
+      books = books.concat(book)
+    }
+
     this.setState((state) => ({
-      books: state.books.map((m) => m.id === book.id ? book : m).sort(sortBy('title'))
+      books: books.sort(sortBy('title'))
     }))
 
     BooksAPI.update(book, book.shelf)
@@ -29,7 +34,7 @@ class BooksApp extends Component {
         <Route path="/static/search" component={Static.Search} />
         <Route path="/static/List" component={Static.List} />
         <Route path="/search" render={() => (
-          <Search books={this.state.books} onUpdateBook={this.updateBook} />
+          <Search onUpdateBook={this.updateBook} />
         )}/>
         <Route path="/list" render={() => (
           <List books={this.state.books} onUpdateBook={this.updateBook} />
