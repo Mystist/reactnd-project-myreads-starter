@@ -8,6 +8,7 @@ import Book from './Book'
 
 class Search extends Component {
   static propTypes = {
+    books: PropTypes.array.isRequired,
     onUpdateBook: PropTypes.func.isRequired
   }
 
@@ -30,7 +31,7 @@ class Search extends Component {
   search = _.debounce((query) => {
     BooksAPI.search(query, 100).then((books) => {
       if (this.state.query && books instanceof Array && books.length > 0) {
-        this.setState({ books: books.sort(sortBy('title')) })
+        this.setState({ books: books.map((m) => this.props.books.find((o) => o.id === m.id) || m).sort(sortBy('title')) })
       } else {
         this.setState({ books: [] })
       }
@@ -44,7 +45,7 @@ class Search extends Component {
     return (
       <div className="search-books">
         <div className="search-books-bar">
-          <Link to="/List" className="close-search">Close</Link>
+          <Link to="/" className="close-search">Close</Link>
           <div className="search-books-input-wrapper">
             <input
               type="text"

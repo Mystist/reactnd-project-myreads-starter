@@ -16,17 +16,14 @@ class BooksApp extends Component {
       this.setState({ books: books.sort(sortBy('title')) })
     })
   }
-  updateBook = (book) => {
-    let books = this.state.books.map((m) => m.id === book.id ? book : m)
-    if (!books.find((m) => m.id === book.id)) {
-      books = books.concat(book)
-    }
+  updateBook = (book, shelf) => {
+    BooksAPI.update(book, shelf).then(() => {
+      book.shelf = shelf
 
-    this.setState((state) => ({
-      books: books.sort(sortBy('title'))
-    }))
-
-    BooksAPI.update(book, book.shelf)
+      this.setState((state) => ({
+        books: state.books.filter((m) => m.id !== book.id).concat(book).sort(sortBy('title'))
+      }))
+    })
   }
   render() {
     return (
@@ -34,9 +31,9 @@ class BooksApp extends Component {
         <Route path="/static/search" component={Static.Search} />
         <Route path="/static/List" component={Static.List} />
         <Route path="/search" render={() => (
-          <Search onUpdateBook={this.updateBook} />
+          <Search books={this.state.books} onUpdateBook={this.updateBook} />
         )}/>
-        <Route path="/list" render={() => (
+        <Route exact path="/" render={() => (
           <List books={this.state.books} onUpdateBook={this.updateBook} />
         )}/>
       </div>
